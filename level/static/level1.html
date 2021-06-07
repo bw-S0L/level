@@ -93,6 +93,29 @@ const color=d3.scaleLinear().
 domain([5,40]).
 range([0,1]);
 
+list=[5,10,15,25,30,35,40];
+var legend = d3.select('#maingroup').selectAll(".legend")
+                .data(list)
+                .enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", function(d, i) { return "translate(" + (innerWidth + 10) + "," + (i * 25 + 30) + ")"; });
+			legend.append("rect")
+            .data(list) 
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 30)
+            .attr("height", 20)
+            .style("fill", d=>d3.interpolateYlOrRd(color(d)));
+			
+            legend.append("text")
+            .data(list) 
+            .attr('class', 'legend_text')
+            .attr("x", 40)
+            .attr("y", 9)
+            .attr("dy", ".5em")
+            .attr("fill", 'black')
+            .style("text-anchor", "start")
+            .text(d=>d+'°C'); 
 
 const yaxis=d3.axisLeft(yscale)
 .tickSize(3)
@@ -122,8 +145,7 @@ for(let i=0;i!=data.length;i++){
         [allmonths.indexOf(data[i]['date'].getMonth())].pop();
       data[i]['color1']=color(data[i]['max_temperature']);
       data[i]['color2']=color(data[i]['min_temperature']);
-}
-//console.log(data)
+}//console.log(data)
 var x=0;
 var lastid = undefined;
 g.selectAll('.datarect').data(data).enter().append('rect')
