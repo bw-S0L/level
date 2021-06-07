@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>level1</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="/static/js/library/d3-tip.js"></script>
+    <!--script src="https://momentjs.com/">  导入后无法使用</script-->
+</head>
+<body style="margin-left: 500px;">
+   
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <svg width="1600" height="900" id="mainsvg" class="svgs" style="background-color: #ffffff;"></svg>
+<script>
+let svg=d3.select('svg');
+const width =+svg.attr('width');
+const height=+svg.attr('height');
+const margin ={top:60,right:90,bottom:10,left:90};
+const innerWidth=width-margin.left-margin.right;
+const innerHeight=height-margin.top-margin.bottom;
+const g=svg.append('g').attr('id','maingroup')
+.attr('transform',`translate(${margin.left},${margin.top})`);
+const tip=d3.tip()
+.attr('class','d3-tip').html(function(d){
+    let da='Date:'+d['date'].getFullYear()+'-'+(1+d['date'].getMonth())+';'
+            +'max:'+d['max_temperature']+'min:'+d['min_temperature'];
+    return da;
+});
+svg.call(tip);
+
+
+
+d3.csv('./static/temperature_daily.csv').then(data=>{
+    data.forEach(d=>{
+        d['max_temperature']=+(d['max_temperature']);
+        d['min_temperature']=+(d['min_temperature']);
+    })
+ var   allyears=Array.from(new Set(data.map(d=>{
+       let a=new Date(d['date']);
+         return a.getFullYear();
+    }
+        )));
+
+   
+ var   allmonths=Array.from(new Set(data.map(d=>{
+       let a=new Date(d['date']);
+      
+         return a.getMonth();
+    })));
+
+    years=[];
+    allyears.forEach(d=>{
+        let b=[];
+        allmonths.forEach(d=>{
+         b.push([]);
+        })
+        years.push(b);
+    });
+  
+    data.forEach(d=>{
+        d['date']=new Date(d['date']);
+        years[allyears.indexOf(d['date'].getFullYear())]
+        [allmonths.indexOf(d['date'].getMonth())].push(d);
+    })
+    for(let i=0;i<years.length;i++){
+         for(let j=0;j<years[i].length;j++){
+             let maxt=0;
+             let mint=100;//maxt=years[i][j][0]['max_temperature']报错
+             for(let k=0;k<years[i][j].length;k++){
+                if(maxt<years[i][j][k]['max_temperature'])
+                     maxt=years[i][j][k]['max_temperature'];
+                if(mint>years[i][j][k]['min_temperature'])
+                 mint=years[i][j][k]['min_temperature'];
+             }
+             years[i][j].push(maxt);
+             years[i][j].push(mint);
+         }
+    }
+
+
+var Engmonths=['January','February','March','April'
+,'May','June','July','August','September','October'
+,'November','December'];
+
+    
+const xscale= d3.scaleBand()
+.domain(allyears)
+.range([0, innerWidth]);
+
+const yscale=d3.scaleBand().
+domain(allmonths.map(d=>Engmonths[d])).
+range([0,innerHeight]);
+const color=d3.scaleLinear().
+domain([5,40]).
+range([0,1]);
+
+
+const yaxis=d3.axisLeft(yscale)
+.tickSize(3)
+.tickPadding(7);
+const xaxis=d3.axisBottom(xscale).
+tickSize(-3)
+.tickPadding(-10);
+g.append('g').call(yaxis)
+.attr('id ,yaxis');
+
+g.append('g').call(xaxis)
+.attr('id','xaxis');
+
+data=data.filter(function(d,i){
+    let a=data[i+1];
+    let b;
+    if(a)
+       b=a['date'].getMonth();
+     else b=-1;
+    if(d['date'].getMonth()!=b)
+        return true;
+});
+for(let i=0;i!=data.length;i++){
+      data[i]['min_temperature']=years[allyears.indexOf(data[i]['date'].getFullYear())]
+        [allmonths.indexOf(data[i]['date'].getMonth())].pop();
+      data[i]['max_temperature']=years[allyears.indexOf(data[i]['date'].getFullYear())]
+        [allmonths.indexOf(data[i]['date'].getMonth())].pop();
+      data[i]['color1']=color(data[i]['max_temperature']);
+      data[i]['color2']=color(data[i]['min_temperature']);
+}
+//console.log(data)
+var x=0;
+var lastid = undefined;
+g.selectAll('.datarect').data(data).enter().append('rect')
+.attr('class','datarect').
+attr('width',50).
+attr('height',40).
+attr('y',d=>(yscale(Engmonths[d['date'].getMonth()]))+15).
+attr('x',d=>(xscale(d['date'].getFullYear()))+15).
+attr('fill',d=>d3.interpolateYlOrRd((d['color1']))).
+attr('opacity',0.9)
+.on('click',function(d){
+    if(x==0){
+    g.selectAll('.datarect').data(data)
+    .attr('fill',da=>d3.interpolateYlOrRd((da['color2'])));
+    x=1;
+}
+    else  {
+    g.selectAll('.datarect').data(data)
+    .attr('fill',da=>d3.interpolateYlOrRd((da['color1'])))
+         x=0;
+    }
+})
+.on('mouseover',function(d){
+    d3.event.preventDefault();
+    let da='Date:'+d['date'].getFullYear()+'-'+(1+d['date'].getMonth())+';'
+            +'max:'+d['max_temperature']+'min:'+d['min_temperature'];
+              if(lastid !==da){
+                tip.show(d)
+                lastid = da;
+              }else{
+                tip.hide(d)
+              }
+})
+
+
+
+
+
+
+
+});
+/*alldate=Arry.from(new Set(data.map(d=>d['date'])));
+alldate=alldate.sort((a,b)=>{
+    return new Date(a)-new Date(b);
+});*/
+
+//date,max_temperature,min_temperature
+
+</script>
+
+  </body>
+</html>
