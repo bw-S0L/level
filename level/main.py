@@ -14,10 +14,12 @@ def level1():
 def level2():
     return flask.send_from_directory('static', 'level2.html')
 
-@app.route('/level3')
-def level3():
-    return flask.send_from_directory('static', 'level3.html')
-
+@app.route('/level3_1')
+def level3_1():
+    return flask.send_from_directory('static', 'level3_1.html')
+@app.route('/level3_2')
+def level3_2():
+    return flask.send_from_directory('static', 'level3_2.html')
 """"@app.route('/favicon.ico')
 def favicon(): 
     return flask.send_from_directory('static', 'loveheart.ico', mimetype='image/vnd.microsoft.icon')"""

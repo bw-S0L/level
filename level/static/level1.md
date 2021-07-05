@@ -18,7 +18,8 @@ Here are the basic requirements:
 
 # Level 2 Challenge: Improvement of the Year/Month Heatmap
 
-In Level 1, we have visualized the temperature differences across months and years. However, even within a month, the temperatures may vary drastically. In this task, you need to improve the previous visualization by showing the daily changes of temperature as well. You only need to focus on the last 5 to 10 years of data.
+In Level 1, we have visualized the temperature differences across months and years. However, even within a month, the temperatures may vary drastically. In this task, you need to
+ improve the previous visualization by showing the daily changes of temperature as well. You only need to focus on the last 5 to 10 years of data.
 
 1. Same as level 1, x direction indicates the year and y direction indicates the month (you can switch them if you like). Each cell indicates the corresponding month of a specific year.
 
