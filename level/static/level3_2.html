@@ -8,10 +8,10 @@
 
 <body>
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-    <svg width="1800" height="920" id="mainsvg" class="svgs"></svg>
+    <svg width="1900" height="920" id="mainsvg" class="svgs"></svg>
     <script>
         let svg = d3.select('#mainsvg');
-        var width = svg.attr('width') / 2 - 50, height = svg.attr('height');
+        var width = (svg.attr('width') - 100) / 2 - 50, height = svg.attr('height');
         let nodes, links;
         let circles, lines;
         let color, colordata;
@@ -184,10 +184,33 @@
 
 
             }
+            //图例
+            var list = [0, 5, 10, 15, 20, 25, 30, 35, 40]
+            var legend = d3.select('#maingroup').selectAll(".legend")
+                .data(list)
+                .enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", function (d, i) {
+                    return "translate(" + (innerHeight + width + 60) + "," + (i * 25 + 30) + ")";
+                })
 
+            legend.append("rect")
+                .data(list)
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", 30)
+                .attr("height", 20)
+                .style("fill", d => d3.interpolateRainbow(colordata(d)));
 
-
-
+            legend.append("text")
+                .data(list)
+                .attr('class', 'legend_text')
+                .attr("x", 40)
+                .attr("y", 9)
+                .attr("dy", ".5em")
+                .attr("fill", 'black')
+                .style("text-anchor", "start")
+                .text(d => d);
 
 
         })
