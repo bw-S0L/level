@@ -3,23 +3,194 @@
 
 <head>
     <title>level3_2</title>
-
     <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 
 <body>
-    <svg width="1800" height="920" id="maisvg" class="svgs"></svg>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <svg width="1800" height="920" id="mainsvg" class="svgs"></svg>
     <script>
+        let svg = d3.select('#mainsvg');
+        var width = svg.attr('width') / 2 - 50, height = svg.attr('height');
+        let nodes, links;
+        let circles, lines;
+        let color, colordata;
+        let simulation;
+        let max, min;
+        var w, h, l;
+        const margin = { top: 50, right: 70, bottom: 50, left: 50 };
+        const innerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+        const g = svg.append('g').attr('id', 'maingroup')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+        const s = d3.scaleLinear()
+            .domain([10, 40])
+            .range([3, 10])
+        const render_init = function () {
 
+            lines = g.selectAll('line').data(links)
+                .enter().append('line')
+                .attr('stroke', 'black')
+                .attr('opacity', 0.8)
+                .attr('stroke-width', .5);
+
+            circles = g.selectAll('circle').data(nodes)
+                .enter().append('circle')
+                .attr('r', d => {
+                    let r = 10;
+                    for (let i = 0; i < max; i++) {
+                        if (links[i].source == d.index || links[i].target == d.index)
+                            r++;
+                    }
+
+                    return s(r);
+                })
+                .attr('fill', d => color(d.index))
+        }
+
+        function ticked() {
+            lines
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+            circles
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y)
+        }
         d3.json('./static/HKUST_coauthor_graph.json').then(data => {
-            console.log(data.edges)
+            links = data.edges.filter(d => {
+                return d.source <= data.nodes.length && d.target <= data.nodes.length
+            })//找了一下午的bug，竟然有link的节点不存在
+
+            max = links.length;
+            min = data.nodes.length;
+
+            nodes = []
+            for (let i = 0; i <= data.nodes.length; i++) {
+                nodes.push({ 'index': i })
+            }
+            node = []
+            nodess = []
+            for (let i = 0; i < min; i++)
+                nodess.push({ "index": i })
+            for (let i = 0; i < min; i++)
+                node.push(nodess)
+            color = d3.scaleDiverging(d3.interpolateRainbow)
+                .domain([0, nodes.length - 1])
+
+            render_init();
+
+            simulation = d3.forceSimulation(nodes)
+                .force('manyBody', d3.forceManyBody().strength(-30))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force("link", d3.forceLink(links).strength(0.3).distance(250))
+                .alphaTarget(0.1)
+                .on('tick', ticked);
+            //矩阵
+            const xscale = d3.scaleLinear()
+                .domain([0, min])
+                .range([width + 50, innerHeight + width + 50]);
+            const yscale = d3.scaleLinear()
+                .domain([0, min])
+                .range([0, innerHeight]);
+            colordata = d3.scaleLinear()
+                .domain([0, 40])
+                .range([0, 1])
+            /*const xaxis = d3.axisBottom(xscale)
+                .tickSize(-5)
+                .tickPadding(-10);
+            const yaxis = d3.axisLeft(yscale)
+                .tickSize(5)
+                .tickPadding(10);
+            g.append('g').call(xaxis);
+            g.append('g').call(yaxis);*/
+            //数据太多了，设置刻度看不清
+            w = (innerHeight > 800) ? 800 : innerHeight;
+            l = w / min;
+
+            for (let i = 0; i < min; i++) {
+                let z = 0;
+                var o = [];
+                for (let k = 0; k < max; k++) {
+
+                    if (links[k].source.index == i || links[k].target.index == i) {
+                        z++;
+                        o.push({ "s": links[k].source.index, "t": links[k].target.index })
+                    }
+                }
+                console.log(z);
+                h = d3.interpolateRainbow(colordata(z));
+                for (let j = 0; j <= i; j++) {
+                    d3.select('g').
+                        append('g')
+                        .append("rect")
+                        .datum(node[i][j])
+                        .attr('class', "datarect")
+                        .attr('width', l)
+                        .attr('height', l)
+                        .attr('x', xscale(j))
+                        .attr('y', yscale(i))
+                        .attr('fill', d => {
+                            var a = 0;
+                            for (let m = 0; m < o.length; m++) {
+                                if (o[m].s == i && o[m].t == j) {
+                                    a = 1;
+                                    break;
+                                }
+                                if (o[m].t == i && o[m].s == j) {
+                                    a = 1;
+                                    break;
+                                }
+                            }
+                            if (j < i && a == 1)
+                                return h;
+                            else return "gray"
+
+                        })
+                        .attr('opacity', 0.8);
+
+                }
+                for (let j = 0; j < i; j++) {
+                    d3.select('g').
+                        append('g')
+                        .append("rect")
+                        .datum(node[i][j])
+                        .attr('class', "datarect")
+                        .attr('width', l)
+                        .attr('height', l)
+                        .attr('x', xscale(i))
+                        .attr('y', yscale(j))
+                        .attr('fill', d => {
+                            var a = 0;
+                            for (let m = 0; m < o.length; m++) {
+                                if (o[m].s == i && o[m].t == j) {
+                                    a = 1;
+                                    break;
+                                }
+                                if (o[m].t == i && o[m].s == j) {
+                                    a = 1;
+                                    break;
+                                }
+                            }
+                            if (a == 1)
+                                return h;
+                            else return "gray"
+
+                        })
+                        .attr('opacity', 0.8);
+
+                }
+
+
+            }
+
+
+
+
+
 
         })
-
-
-
-
-
 
 
 

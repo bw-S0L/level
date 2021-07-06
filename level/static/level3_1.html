@@ -7,27 +7,32 @@
 </head>
 
 <body>
-    <svg width="1800" height="1000" id="mainsvg" class="svgs"></svg>
+    <svg width="1800" height="920" id="mainsvg" class="svgs"></svg>
     <script>
         let svg = d3.select('#mainsvg');
-        var width = svg.attr('width'), height = svg.attr('height');
+        var width = svg.attr('width') / 2 - 50, height = svg.attr('height');
         let nodes, links;
         let circles, lines;
         let color;
         let simulation;
         let max;
+        const margin = { top: 50, right: 70, bottom: 50, left: 50 };
+        const innerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+        const g = svg.append('g').attr('id', 'maingroup')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
         const scale = d3.scaleLinear()
             .domain([10, 40])
             .range([3, 10])
         const render_init = function () {
 
-            lines = svg.selectAll('line').data(links)
+            lines = g.selectAll('line').data(links)
                 .enter().append('line')
                 .attr('stroke', 'black')
                 .attr('opacity', 0.8)
                 .attr('stroke-width', .5);
 
-            circles = svg.selectAll('circle').data(nodes)
+            circles = g.selectAll('circle').data(nodes)
                 .enter().append('circle')
                 .attr('r', d => {
                     let r = 10;
@@ -70,9 +75,11 @@
             simulation = d3.forceSimulation(nodes)
                 .force('manyBody', d3.forceManyBody().strength(-30))
                 .force('center', d3.forceCenter(width / 2, height / 2))
-                .force("link", d3.forceLink(links).strength(0.1).distance(300))
+                .force("link", d3.forceLink(links).strength(0.3).distance(250))
                 .alphaTarget(0.1)
                 .on('tick', ticked);
+
+
         })
 
 
